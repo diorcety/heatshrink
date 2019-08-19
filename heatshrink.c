@@ -279,8 +279,10 @@ static int encoder_sink_read(config *cfg, heatshrink_encoder *hse,
 
 static int encode(config *cfg) {
     uint8_t window_sz2 = cfg->window_sz2;
-    size_t window_sz = 1 << window_sz2; 
-    heatshrink_encoder *hse = heatshrink_encoder_alloc(window_sz2, cfg->lookahead_sz2);
+    size_t window_sz = 1 << window_sz2;
+    heatshrink_encoder _hse;
+    heatshrink_encoder *hse = &_hse;
+    heatshrink_encoder_reset(hse);
     if (hse == NULL) { die("failed to init encoder: bad settings"); }
     ssize_t read_sz = 0;
     io_handle *in = cfg->in;
@@ -303,7 +305,6 @@ static int encode(config *cfg) {
 
     if (read_sz == -1) { HEATSHRINK_ERR(1, "read"); }
 
-    heatshrink_encoder_free(hse);
     close_and_report(cfg);
     return 0;
 }
@@ -349,8 +350,9 @@ static int decode(config *cfg) {
     uint8_t window_sz2 = cfg->window_sz2;
     size_t window_sz = 1 << window_sz2;
     size_t ibs = cfg->decoder_input_buffer_size;
-    heatshrink_decoder *hsd = heatshrink_decoder_alloc(ibs,
-        window_sz2, cfg->lookahead_sz2);
+    heatshrink_decoder _hsd;
+    heatshrink_decoder *hsd = &_hsd;
+    heatshrink_decoder_reset(hsd);
     if (hsd == NULL) { die("failed to init decoder"); }
 
     ssize_t read_sz = 0;
@@ -379,8 +381,7 @@ static int decode(config *cfg) {
         }
     }
     if (read_sz == -1) { HEATSHRINK_ERR(1, "read"); }
-        
-    heatshrink_decoder_free(hsd);
+
     close_and_report(cfg);
     return 0;
 }
